@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wegwiser API Documentation</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+        body {
+            margin:0;
+            background: #fafafa;
+        }
+        .swagger-ui .topbar {
+            display: none;
+        }
+        .swagger-ui .info .title {
+            color: #3b4151;
+            font-family: sans-serif;
+            font-size: 36px;
+            font-weight: 600;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
+    <script>
+        window.onload = function() {
+            // Load the Swagger specification
+            fetch('./swagger.json')
+                .then(response => response.json())
+                .then(spec => {
+                    const ui = SwaggerUIBundle({
+                        spec: spec,
+                        dom_id: '#swagger-ui',
+                        deepLinking: true,
+                        presets: [
+                            SwaggerUIBundle.presets.apis,
+                            SwaggerUIStandalonePreset
+                        ],
+                        plugins: [
+                            SwaggerUIBundle.plugins.DownloadUrl
+                        ],
+                        layout: "StandaloneLayout",
+                        validatorUrl: null,
+                        docExpansion: "list",
+                        filter: true,
+                        showRequestHeaders: true,
+                        showCommonExtensions: true,
+                        tryItOutEnabled: true
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading Swagger specification:', error);
+                    document.getElementById('swagger-ui').innerHTML = `
+                        <div style="padding: 20px; text-align: center;">
+                            <h2>Error Loading API Documentation</h2>
+                            <p>Could not load the Swagger specification file.</p>
+                            <p>Make sure the server is running and the swagger.json file is accessible.</p>
+                            <p>Error: ${error.message}</p>
+                        </div>
+                    `;
+                });
+        };
+    </script>
+</body>
+</html> 

@@ -1,0 +1,514 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Wegwiser API Gateway",
+    "version": "1.0.0",
+    "description": "API documentation for the Wegwiser API Gateway. This API provides authentication services using Auth0 and manages user accounts with role-based access control.",
+    "contact": {
+      "name": "Wegwiser Team",
+      "email": "support@wegwiser.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.wegwiser.com",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "API root endpoint",
+        "description": "Get basic information about the API gateway and available endpoints",
+        "tags": ["System"],
+        "responses": {
+          "200": {
+            "description": "API information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "API name"
+                    },
+                    "version": {
+                      "type": "string",
+                      "description": "API version"
+                    },
+                    "endpoints": {
+                      "type": "object",
+                      "properties": {
+                        "auth": {
+                          "type": "string",
+                          "description": "Authentication endpoints base path"
+                        },
+                        "health": {
+                          "type": "string",
+                          "description": "Health check endpoint path"
+                        },
+                        "docs": {
+                          "type": "string",
+                          "description": "API documentation endpoint path"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Wegwiser API Gateway",
+                  "version": "1.0.0",
+                  "endpoints": {
+                    "auth": "/api/auth",
+                    "health": "/health",
+                    "docs": "/api-docs"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health check endpoint",
+        "description": "Check if the API gateway is running properly",
+        "tags": ["System"],
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "status": "OK",
+                  "message": "Wegwiser API Gateway is running",
+                  "timestamp": "2023-01-01T00:00:00.000Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/signup": {
+      "post": {
+        "summary": "Create a new user account",
+        "description": "Register a new user with Auth0 and assign appropriate role based on position. This endpoint creates a user account in Auth0, assigns the appropriate role based on the user's position, and returns authentication tokens.",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupRequest"
+              },
+              "example": {
+                "firstName": "John",
+                "lastName": "Doe",
+                "workEmail": "john.doe@company.com",
+                "password": "securePassword123",
+                "jobTitle": "Senior Software Engineer",
+                "position": "Engineer / QA"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                },
+                "example": {
+                  "message": "User created successfully",
+                  "user": {
+                    "id": "auth0|1234567890",
+                    "email": "john.doe@company.com",
+                    "name": "John Doe",
+                    "role": "engineer",
+                    "jobTitle": "Senior Software Engineer",
+                    "position": "Engineer / QA"
+                  },
+                  "tokens": {
+                    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMyJ9...",
+                    "id_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMyJ9...",
+                    "refresh_token": "v1.abc123...",
+                    "expires_in": 86400
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing required fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "All fields are required"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Failed to create user",
+                  "message": "User already exists"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Authenticate user and get access tokens",
+        "description": "Login with email and password to receive JWT tokens. This endpoint authenticates a user against Auth0 and returns access tokens for API access.",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "email": "john.doe@company.com",
+                "password": "securePassword123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                },
+                "example": {
+                  "message": "Login successful",
+                  "user": {
+                    "sub": "auth0|1234567890",
+                    "email": "john.doe@company.com",
+                    "email_verified": true,
+                    "name": "John Doe",
+                    "nickname": "Senior Software Engineer",
+                    "picture": "https://s.gravatar.com/avatar/...",
+                    "updated_at": "2023-01-01T00:00:00.000Z"
+                  },
+                  "tokens": {
+                    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMyJ9...",
+                    "id_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMyJ9...",
+                    "refresh_token": "v1.abc123...",
+                    "expires_in": 86400
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing email or password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Email and password are required"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Invalid email or password"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token obtained from login or signup endpoints"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "User ID from Auth0"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User email address"
+          },
+          "name": {
+            "type": "string",
+            "description": "User full name"
+          },
+          "role": {
+            "type": "string",
+            "description": "User role in the system",
+            "enum": [
+              "admin",
+              "product_manager",
+              "designer",
+              "engineer",
+              "project_manager",
+              "business_analyst",
+              "qa_engineer",
+              "devops_engineer",
+              "data_scientist",
+              "ux_researcher",
+              "marketing_manager",
+              "sales_representative",
+              "customer_success_manager",
+              "content_writer",
+              "graphic_designer",
+              "frontend_developer",
+              "backend_developer",
+              "full_stack_developer",
+              "mobile_developer",
+              "system_administrator",
+              "security_engineer",
+              "user"
+            ]
+          },
+          "jobTitle": {
+            "type": "string",
+            "description": "User job title"
+          },
+          "position": {
+            "type": "string",
+            "description": "User position in the company"
+          }
+        }
+      },
+      "SignupRequest": {
+        "type": "object",
+        "required": ["firstName", "lastName", "workEmail", "password", "jobTitle", "position"],
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "description": "User first name",
+            "minLength": 1
+          },
+          "lastName": {
+            "type": "string",
+            "description": "User last name",
+            "minLength": 1
+          },
+          "workEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "User work email address"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "description": "User password (minimum 8 characters)"
+          },
+          "jobTitle": {
+            "type": "string",
+            "description": "User job title",
+            "minLength": 1
+          },
+          "position": {
+            "type": "string",
+            "description": "User position in the company",
+            "enum": [
+              "Admin",
+              "Product manager / Owner",
+              "UX / Visual designer",
+              "Engineer / QA",
+              "Founder / CEO / CPO",
+              "Project Manager",
+              "Business Analyst",
+              "QA Engineer",
+              "DevOps Engineer",
+              "Data Scientist",
+              "UX Researcher",
+              "Marketing Manager",
+              "Sales Representative",
+              "Customer Success Manager",
+              "Content Writer",
+              "Graphic Designer",
+              "Frontend Developer",
+              "Backend Developer",
+              "Full Stack Developer",
+              "Mobile Developer",
+              "System Administrator",
+              "Security Engineer"
+            ]
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User email address"
+          },
+          "password": {
+            "type": "string",
+            "description": "User password"
+          }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Response message"
+          },
+          "user": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "sub": {
+                    "type": "string",
+                    "description": "Auth0 user ID"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "email_verified": {
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "nickname": {
+                    "type": "string"
+                  },
+                  "picture": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            ]
+          },
+          "tokens": {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string",
+                "description": "JWT access token"
+              },
+              "id_token": {
+                "type": "string",
+                "description": "JWT ID token"
+              },
+              "refresh_token": {
+                "type": "string",
+                "description": "JWT refresh token"
+              },
+              "expires_in": {
+                "type": "integer",
+                "description": "Token expiration time in seconds"
+              }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "message": {
+            "type": "string",
+            "description": "Additional error details"
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["OK"],
+            "description": "Health status"
+          },
+          "message": {
+            "type": "string",
+            "description": "Health message"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Current timestamp"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User authentication and authorization endpoints"
+    },
+    {
+      "name": "System",
+      "description": "System health and information endpoints"
+    }
+  ]
+} 
